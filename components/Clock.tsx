@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Animated, StyleSheet, Text, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import { runOnJS } from "react-native-reanimated";
 
 const SESSIONS = [25, 5, 25, 10, 25, 15, 25, 20];
 
@@ -12,21 +13,32 @@ export function Clock() {
 
   const [isPaused, setIsPaused] = useState(false);
 
-  const hold = Gesture.LongPress().onStart(() => {
+  function longPress() {
     if (isPaused) {
       setIsPaused(false);
-      return;
     }
 
     setIsPaused(true);
     setMinutes(SESSIONS[sessionIndex]);
     setSeconds(0);
+  }
+
+  const hold = Gesture.LongPress().onStart(() => {
+    runOnJS(longPress)();
+    // if (isPaused) {
+    //   runOnJS(setIsPaused)(false);
+    //   return;
+    // }
+    //
+    // runOnJS(setIsPaused)(true);
+    // runOnJS(setMinutes)(SESSIONS[sessionIndex]);
+    // runOnJS(setSeconds)(0);
   });
 
   const doubleTap = Gesture.Tap()
     .numberOfTaps(2)
     .onStart(() => {
-      setIsPaused((p) => !p);
+      runOnJS(setIsPaused)(true);
     });
 
   function formatWithLeadingZero(n: number) {
@@ -56,10 +68,10 @@ export function Clock() {
   return (
     <GestureDetector gesture={doubleTap}>
       <GestureDetector gesture={hold}>
-        <View style={styles.container}>
+        <Animated.View style={styles.container}>
           <Text style={styles.minutes}>{minutes}</Text>
           <Text style={styles.seconds}>{formatWithLeadingZero(seconds)}</Text>
-        </View>
+        </Animated.View>
       </GestureDetector>
     </GestureDetector>
   );
